@@ -1,0 +1,140 @@
+.card {
+  background: var(--color-white);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-gray-100);
+  transition: var(--transition-normal);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.donorInfo {
+  flex: 1;
+}
+
+.donorName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.eventName {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin: 0;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  color: var(--color-white);
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.statusIcon {
+  font-size: 1rem;
+}
+
+.statusText {
+  font-size: 0.875rem;
+}
+
+.details {
+  border-top: 1px solid var(--color-gray-100);
+  border-bottom: 1px solid var(--color-gray-100);
+  padding: var(--spacing-md) 0;
+  margin-bottom: var(--spacing-md);
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.detailItem:last-child {
+  margin-bottom: 0;
+}
+
+.detailLabel {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  font-weight: 500;
+}
+
+.detailValue {
+  font-size: 0.875rem;
+  color: var(--color-gray-900);
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.impact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.impactItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs);
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+}
+
+.impactIcon {
+  font-size: 1rem;
+}
+
+.impactText {
+  font-size: 0.875rem;
+  color: var(--color-primary-dark);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .statusBadge {
+    align-self: flex-start;
+  }
+  
+  .detailItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  
+  .detailValue {
+    max-width: 100%;
+    text-align: left;
+  }
+}
