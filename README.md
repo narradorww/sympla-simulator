@@ -37,11 +37,18 @@ npm install
 npm run dev
 ```
 
-### 3. Acessar a Aplicação
+### 3. Configurar Variáveis de Ambiente
+
+Copie o arquivo de exemplo e configure as URLs:
+```bash
+cp .env.example .env.local
+```
+
+### 4. Acessar a Aplicação
 
 - **Simulador:** http://localhost:3000
-- **Middleware:** http://localhost:3001
 - **Dashboard:** http://localhost:3000/dashboard
+- **Middleware (Produção):** https://agroforestree-sympla-middleware.onrender.com
 
 ## 🧪 Testes
 
