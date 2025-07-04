@@ -22,6 +22,7 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
   const [loading, setLoading] = useState(false);
   const [webhookSent, setWebhookSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastOrderId, setLastOrderId] = useState<string | null>(null);
 
   const handleInputChange = (field: keyof OrderData, value: string | number) => {
     setOrderData(prev => ({
@@ -30,17 +31,22 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
     }));
   };
 
-  const simulateOrderApproval = async () => {
+  const simulateWebhook = async (eventType: WebhookPayload['event']) => {
     setLoading(true);
     setError(null);
 
     try {
+      // Para cancelamentos e reembolsos, usar o último order_id se existir
+      const orderId = (eventType === 'order.cancelled' || eventType === 'order.refunded') && lastOrderId
+        ? lastOrderId
+        : `ORDER_${Date.now()}`;
+
       const webhookPayload: WebhookPayload = {
-        event: 'order.approved',
+        event: eventType,
         data: {
           ...orderData,
-          order_identifier: `ORDER_${Date.now()}`,
-          order_status: 'approved'
+          order_identifier: orderId,
+          order_status: eventType === 'order.approved' ? 'approved' : 'pending'
         },
         timestamp: new Date().toISOString()
       };
@@ -48,6 +54,11 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
       await sendWebhookToMiddleware(webhookPayload);
       setWebhookSent(true);
       onWebhookSent?.(webhookPayload);
+
+      // Salvar order_id para cancelamentos futuros
+      if (eventType === 'order.approved') {
+        setLastOrderId(orderId);
+      }
 
       // Reset após 3 segundos
       setTimeout(() => setWebhookSent(false), 3000);
@@ -179,22 +190,49 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
           </div>
         )}
 
-        <button
-          onClick={simulateOrderApproval}
-          disabled={loading}
-          className={`${styles.submitButton} ${loading ? styles.loading : ''}`}
-        >
-          {loading ? (
-            <>
-              <span className={styles.spinner}></span>
-              Processando...
-            </>
-          ) : (
-            <>
-              🚀 Simular Compra Aprovada
-            </>
-          )}
-        </button>
+        <div className={styles.buttonGroup}>
+          <button
+            onClick={() => simulateWebhook('order.approved')}
+            disabled={loading}
+            className={`${styles.submitButton} ${styles.approveButton} ${loading ? styles.loading : ''}`}
+          >
+            {loading ? (
+              <>
+                <span className={styles.spinner}></span>
+                Processando...
+              </>
+            ) : (
+              <>
+                ✅ Simular Compra Aprovada
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => simulateWebhook('order.cancelled')}
+            disabled={loading || !lastOrderId}
+            className={`${styles.submitButton} ${styles.cancelButton} ${loading ? styles.loading : ''}`}
+            title={!lastOrderId ? 'Primeiro faça uma compra aprovada' : ''}
+          >
+            ❌ Simular Cancelamento
+          </button>
+
+          <button
+            onClick={() => simulateWebhook('order.refunded')}
+            disabled={loading || !lastOrderId}
+            className={`${styles.submitButton} ${styles.refundButton} ${loading ? styles.loading : ''}`}
+            title={!lastOrderId ? 'Primeiro faça uma compra aprovada' : ''}
+          >
+            💰 Simular Reembolso
+          </button>
+        </div>
+
+        {lastOrderId && (
+          <div className={styles.orderInfo}>
+            <span className={styles.orderLabel}>Último pedido criado:</span>
+            <code className={styles.orderId}>{lastOrderId}</code>
+          </div>
+        )}
       </div>
     </div>
   );

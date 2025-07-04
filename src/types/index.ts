@@ -8,7 +8,7 @@ export interface OrderData {
 }
 
 export interface WebhookPayload {
-  event: 'order.approved' | 'order.created';
+  event: 'order.approved' | 'order.created' | 'order.cancelled' | 'order.refunded';
   data: OrderData & {
     order_identifier: string;
     order_status: 'approved' | 'pending' | 'declined';
