@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { OrderData, WebhookPayload } from '@/types';
 import { sendWebhookToMiddleware } from '@/utils/api';
 import styles from './CheckoutForm.module.css';
@@ -23,6 +23,31 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
   const [webhookSent, setWebhookSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastOrderId, setLastOrderId] = useState<string | null>(null);
+  const [approvedOrders, setApprovedOrders] = useState<Array<{id: string, timestamp: string, eventName: string}>>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>('');
+
+  // Carregar dados do localStorage ao montar o componente
+  useEffect(() => {
+    const savedLastOrderId = localStorage.getItem('sympla-simulator-last-order');
+    const savedApprovedOrders = localStorage.getItem('sympla-simulator-approved-orders');
+    
+    if (savedLastOrderId) {
+      setLastOrderId(savedLastOrderId);
+    }
+    
+    if (savedApprovedOrders) {
+      try {
+        const orders = JSON.parse(savedApprovedOrders);
+        setApprovedOrders(orders);
+        // Se não há ordem selecionada, usar a mais recente
+        if (orders.length > 0 && !selectedOrderId) {
+          setSelectedOrderId(orders[orders.length - 1].id);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar pedidos do localStorage:', error);
+      }
+    }
+  }, [selectedOrderId]);
 
   const handleInputChange = (field: keyof OrderData, value: string | number) => {
     setOrderData(prev => ({
@@ -36,9 +61,9 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
     setError(null);
 
     try {
-      // Para cancelamentos e reembolsos, usar o último order_id se existir
-      const orderId = (eventType === 'order.cancelled' || eventType === 'order.refunded') && lastOrderId
-        ? lastOrderId
+      // Para cancelamentos e reembolsos, usar o order_id selecionado ou criar novo
+      const orderId = (eventType === 'order.cancelled' || eventType === 'order.refunded') && selectedOrderId
+        ? selectedOrderId
         : `ORDER_${Date.now()}`;
 
       const webhookPayload: WebhookPayload = {
@@ -58,6 +83,21 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
       // Salvar order_id para cancelamentos futuros
       if (eventType === 'order.approved') {
         setLastOrderId(orderId);
+        
+        // Adicionar à lista de pedidos aprovados
+        const newOrder = {
+          id: orderId,
+          timestamp: new Date().toISOString(),
+          eventName: orderData.event_name
+        };
+        
+        const updatedOrders = [...approvedOrders, newOrder];
+        setApprovedOrders(updatedOrders);
+        setSelectedOrderId(orderId);
+        
+        // Salvar no localStorage
+        localStorage.setItem('sympla-simulator-last-order', orderId);
+        localStorage.setItem('sympla-simulator-approved-orders', JSON.stringify(updatedOrders));
       }
 
       // Reset após 3 segundos
@@ -210,22 +250,55 @@ export default function CheckoutForm({ onWebhookSent }: CheckoutFormProps) {
 
           <button
             onClick={() => simulateWebhook('order.cancelled')}
-            disabled={loading || !lastOrderId}
+            disabled={loading || approvedOrders.length === 0}
             className={`${styles.submitButton} ${styles.cancelButton} ${loading ? styles.loading : ''}`}
-            title={!lastOrderId ? 'Primeiro faça uma compra aprovada' : ''}
+            title={approvedOrders.length === 0 ? 'Primeiro faça uma compra aprovada' : ''}
           >
             ❌ Simular Cancelamento
           </button>
 
           <button
             onClick={() => simulateWebhook('order.refunded')}
-            disabled={loading || !lastOrderId}
+            disabled={loading || approvedOrders.length === 0}
             className={`${styles.submitButton} ${styles.refundButton} ${loading ? styles.loading : ''}`}
-            title={!lastOrderId ? 'Primeiro faça uma compra aprovada' : ''}
+            title={approvedOrders.length === 0 ? 'Primeiro faça uma compra aprovada' : ''}
           >
             💰 Simular Reembolso
           </button>
         </div>
+
+        {approvedOrders.length > 0 && (
+          <div className={styles.orderSelection}>
+            <label htmlFor="orderSelect" className={styles.orderLabel}>
+              Pedido para cancelar/reembolsar:
+            </label>
+            <select
+              id="orderSelect"
+              value={selectedOrderId}
+              onChange={(e) => setSelectedOrderId(e.target.value)}
+              className={styles.orderSelect}
+            >
+              {approvedOrders.map((order) => (
+                <option key={order.id} value={order.id}>
+                  {order.id} - {order.eventName} ({new Date(order.timestamp).toLocaleString('pt-BR')})
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                localStorage.removeItem('sympla-simulator-last-order');
+                localStorage.removeItem('sympla-simulator-approved-orders');
+                setApprovedOrders([]);
+                setSelectedOrderId('');
+                setLastOrderId(null);
+              }}
+              className={styles.clearButton}
+              title="Limpar histórico de pedidos"
+            >
+              🗑️ Limpar Histórico
+            </button>
+          </div>
+        )}
 
         {lastOrderId && (
           <div className={styles.orderInfo}>
