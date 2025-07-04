@@ -25,6 +25,12 @@ export default function Home() {
             <Link href="/dashboard" className={styles.secondaryButton}>
               📊 Ver Dashboard
             </Link>
+            <Link href="/organizer" className={styles.secondaryButton}>
+              🎯 Dashboard Organizador
+            </Link>
+            <Link href="/user-consent" className={styles.secondaryButton}>
+              👤 Simular Consentimento
+            </Link>
           </div>
         </div>
         

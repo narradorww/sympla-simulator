@@ -86,6 +86,14 @@ export default function Dashboard() {
             🔄 Atualizar
           </button>
           
+          <a href="/organizer" className={styles.navButton}>
+            🎯 Dashboard Organizador
+          </a>
+          
+          <a href="/user-consent" className={styles.navButton}>
+            👤 Simular Consentimento
+          </a>
+          
           {lastUpdate && (
             <span className={styles.lastUpdate}>
               Última atualização: {lastUpdate}
