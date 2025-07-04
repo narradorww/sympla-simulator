@@ -9,7 +9,7 @@ import styles from './dashboard.module.css';
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [middlewareHealth, setMiddlewareHealth] = useState<any>(null);
+  const [middlewareHealth, setMiddlewareHealth] = useState<{status: string; timestamp: string; environment?: string} | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string>('');
